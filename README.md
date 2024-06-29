@@ -155,4 +155,23 @@ To:
 <%end%>
 ```
 
-7. 
+7. (12 min) Add padding by enclosing body within the div container:
+```
+    <div class="container mt-4" >
+
+      <% if notice.present? %>
+        <div class="alert alert-success" role="alert">
+          <%= notice %>
+        </div>
+      <%end%>
+
+      <% if alert.present? %>
+        <div class="alert alert-danger" role="alert">
+          <%= alert %>
+        </div>
+      <%end%>
+
+      <%= yield %>
+
+    </div>
+```
