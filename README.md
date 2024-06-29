@@ -163,7 +163,7 @@ To:
 
 7. (12 min) Add padding by enclosing body within the div container:
 ```
-    <div class="container mt-4" >
+    <div class="container mt-3" >
 
       <% if notice.present? %>
         <div class="alert alert-success" role="alert">
@@ -301,7 +301,7 @@ app/views/zebra/_giragge.html.erb.
 ```
 
 You can embed into any other html pages with:
-`<%= render "zebra/giraffe" %>`
+`<%= render partial: "zebra/giraffe" %>`
 
 When rendering the file, you don't include the underscore in the tag.
 
@@ -329,7 +329,7 @@ When rendering the file, you don't include the underscore in the tag.
 <%end%>
 ```
 
-17. Replace this block within views/layouts/applications.html.erb with just `<%= render "shared/flash_messages" %>`. 
+17. Replace this block within views/layouts/applications.html.erb with just `<%= render partial: "shared/flash_messages" %>`. 
 
 18. (27 min) Likewise, do the same for navbar, which is called within applications.html.erb with just `<%= render "shared/navbar" %>`:
 
@@ -360,7 +360,7 @@ When rendering the file, you don't include the underscore in the tag.
     </nav>
 ```
 
-19. Likewise, refactors cdn_assets, which is called within applications.html.erb with just `<%= render "shared/cdn_assets" %>`:
+19. Likewise, refactors cdn_assets, which is called within applications.html.erb with just `<%= render partial: "shared/cdn_assets" %>`:
 
 ```
 <!-- views/shared/_cdn_assets.html.erb-->
@@ -389,7 +389,205 @@ Note that the meta charset tag is not included. It is left off and moved to the 
 
 The browser needs to know at the very start which font to use before doing anything else.
 
+### D. Refactor codes
 
+#### D1. Move form tag within movies/new.tml.erb.
+
+1. (32 min) Migrate form tag into a partial view template called _form.html.erb. Call it from movies/new.html.erb with `<%= render partial: "movies/form" %>`.
+
+```
+<!-- movies/_form.html.erb -->
+
+<% @movie.errors.full_messages.each do |message| %>
+  <p style="color: red;"><%= message %></p>
+<% end %>
+
+<%= form_with(model: @movie, data: { turbo: :false }) do |form| %>
+  <div>
+    <%= form.label :title %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :description %>
+    <%= form.text_area :description %>
+  </div>
+
+  <div>
+    <%=form.label :image_url %>
+    <%=form.text_area :image_url %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
+```
+
+### E. Passing variables via <% render partial:... %>
+(37 min)
+
+#### E1. views/movies/_form.html.erb
+partial view templates pass html scripts between html files.
+
+1. You can pass the variables from _form.html.erb to new.html.erb via a variable called, e.g., foo. Foo is an iterable object.
+
+```
+<!-- new.html.erb -->
+
+<h1>New movie</h1>
+
+<%= render partial: "movies/form", locals: {foo: @movie} %>
+```
+
+Here is the shorthand:
+
+```
+<!-- new.html.erb -->
+
+<h1>New movie</h1>
+
+<%= render: "movies/form", foo: @movie %>
+```
+(36 min)
+In the above, @movie is a table object
+
+Here is the corresponding script for movies/_form.html.erb
+
+```
+<% @movie.errors.full_messages.each do |message| %>
+  <p style="color: red;"><%= message %></p>
+<% end %>
+
+<%= form_with(model: @movie, data: { turbo: :false }) do |form| %>
+  <div>
+    <%= form.label :title %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :description %>
+    <%= form.text_area :description %>
+  </div>
+
+  <div>
+    <%=form.label :image_url %>
+    <%=form.text_area :image_url %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
+```
+
+Instance variables that are defined in the action controller are available in the view and any partials granted by that view. Therefore, @movie can be called in movies/new.html.erb.
+
+(34 min)
+
+#### E2. Let's pass instance variables around with specific names
+**Amazing!**
+We will utilize the fact that: 
+- instance variables that are defined in the movies_controller are accessible by the forms and the partial html files for refactorig purposes.
+- The new movie and edit movie forms are exactly the same, except that they maipulate different objects.
+- Hence, we refactor _form.html.erb as partial view template with the object being referred to as a variable called foo, which we can pass as either @new_movie or @the_movie objects.
+
+1. Within movies_controller.rb:
+rename #movie to @new_movie and @the_movie, respectively for def new and def edit to differentiate. Remember that any instance variables defined here can be accessed by the files within views.
+
+```
+def new
+  @new_movie = Movie.new
+end
+
+def edit
+  @the_movie = Movie.find(params.fetch(:id))
+end
+```
+
+2. Correspondingly, rename the reference to the instance variable @movie within _form.html.erb to an arbitrary variable called foo as follows:
+
+```
+<!-- _form.html.erb -->
+
+<% foo.errors.full_messages.each do |message| %>
+  <p style="color: red;"><%= message %></p>
+<% end %>
+
+<%= form_with(model: foo, data: { turbo: :false }) do |form| %>
+  <div>
+    <%= form.label :title %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :description %>
+    <%= form.text_area :description %>
+  </div>
+
+  <div>
+    <%=form.label :image_url %>
+    <%=form.text_area :image_url %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
+```
+3. Having made the above changes, we can flexibly call the now universal _form.html.erb template from new.html.erb and edit.html.erb, as follows.
+
+```
+<!-- new.html.erb -->
+
+<h1>New movie</h1>
+
+<%= render partial: "movies/form", locals: {foo: @new_movie } %>
+```
+
+And
+
+```
+<!-- edit.html.erb -->
+
+<h1>Edit movie</h1>
+
+<%= render partial: "movies/form", locals: {foo: @the_movie } %>
+```
+
+### F. Create a new column
+(37min)
+
+#### F1. Add a date column called released_on
+
+1. Type in the terminal: `rails g migration AddReleasedOnToMovies released_on:date` (Rails).
+
+```
+helper-methods-part-3 main % rails g migration AddReleasedOnToMovies released_on:date
+      invoke  active_record
+      create    db/migrate/20240629152130_add_released_on_to_movies.rb
+```
+
+Then, type:
+```
+rails db:migrate
+```
+
+2. Subsequently, you need to add this new variable into: 
+  - the list of permitted variables within def movie_params method to be accessible (Controller).
+  - the _form.html.erb (Views) 
+
+```
+<!-- _form.html.erb -->
+  <div>
+    <%=form.label :released_on %>
+    <%=form.date_select :released_on %>
+  </div>
+```
+
+### G. Beautify the movie details page
+
+1. copy and paste the following code into show.html.erb:
 
 ### Appendix A
 
@@ -398,7 +596,7 @@ The browser needs to know at the very start which font to use before doing anyth
 ```
 <!-- shared/_elephant.html.erb -->
 
-<h1> Hello <%=person%> <> </h1>
+<h1> Hello, <%=person%>! </h1>
 ```
 
 And

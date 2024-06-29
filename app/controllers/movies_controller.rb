@@ -1,6 +1,6 @@
 class MoviesController < ApplicationController
   def new
-    @movie = Movie.new
+    @new_movie = Movie.new
   end
 
   def index
@@ -30,7 +30,7 @@ class MoviesController < ApplicationController
   end
 
   def edit
-    @movie = Movie.find(params.fetch(:id))
+    @the_movie = Movie.find(params.fetch(:id))
   end
 
   def update
@@ -55,5 +55,5 @@ end
 private
 
 def movie_params
-  movie_params = params.require(:movie).permit(:title, :description, :image_url, :director_id)
+  movie_params = params.require(:movie).permit(:title, :description, :image_url, :director_id, :released_on)
 end
