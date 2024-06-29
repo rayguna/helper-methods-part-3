@@ -587,7 +587,288 @@ rails db:migrate
 
 ### G. Beautify the movie details page
 
-1. copy and paste the following code into show.html.erb:
+#### G1. Bootstrap cards for show page
+
+1. Initial code:
+
+```
+<!-- app/view/movies/show.html.erb -->
+
+<div>
+  <div>
+    <h1>
+      Movie #<%= @movie.id %> details
+    </h1>
+
+    <div>
+      <div>
+        <%= link_to "Go back", movies_path %>
+      </div>
+
+      <div>
+        <%= link_to "Edit Movie", edit_movie_path(@movie) %>
+      </div>
+
+      <div>
+        <%= link_to "Delete Movie", @movie, data: { turbo_method: :delete } %>
+      </div>
+    </div>
+
+    <dl>
+      <dt>
+        Title
+      </dt>
+      <dd>
+        <%= @movie.title %>
+      </dd>
+
+      <dt>
+        Description
+      </dt>
+      <dd>
+        <%= @movie.description %>
+      </dd>
+
+      <dt>
+        Created at
+      </dt>
+      <dd>
+        <%= time_ago_in_words(@movie.created_at) %> ago
+      </dd>
+
+      <dt>
+        Updated at
+      </dt>
+      <dd>
+        <%= time_ago_in_words(@movie.updated_at) %> ago
+      </dd>
+    </dl>
+  </div>
+</div>
+```
+
+copy and paste the following code into show.html.erb:
+
+```
+<div class="card">
+  <div class="card-header">
+    <%= link_to "Movie ##{@movie.id}", @movie %>
+  </div>
+
+  <div class="card-body">
+    <dl>
+      <dt>
+        Title
+      </dt>
+      <dd>
+        <%= @movie.title %>
+      </dd>
+
+      <dt>
+        Description
+      </dt>
+      <dd>
+        <%= @movie.description %>
+      </dd>
+    </dl>
+
+    <div class="row">
+      <div class="col">
+        <div class="d-grid">
+          <%= link_to edit_movie_path(@movie), class: "btn btn-outline-secondary" do %>
+            <i class="fa-regular fa-pen-to-square"></i>
+          <% end %>
+        </div>
+      </div>
+      <div class="col">
+        <div class="d-grid">
+          <%= link_to @movie, data: { turbo_method: :delete }, class: "btn btn-outline-secondary" do %>
+            <i class="fa-regular fa-trash-can"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    Last updated <%= time_ago_in_words(@movie.updated_at) %> ago
+  </div>
+</div>
+```
+
+2. (40 min - 45 min) Bootstrap card formatting. Write the grid first, then put the contents into each cell. 
+
+#### G2. Movies index page - index.html.erb
+
+1. (45 min - 46 min) Reduce the code from:
+
+```
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<!--<%= render "zebra/giraffe" %>-->
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+<table>
+  <tr>
+    <th>
+      ID
+    </th>
+
+    <th>
+      Title
+    </th>
+
+    <th>
+      Description
+    </th>
+
+    <th>
+      image_url
+    </th>
+
+    <th>
+      Created at
+    </th>
+
+    <th>
+      Updated at
+    </th>
+
+    <th>
+    </th>
+  </tr>
+
+  <% @movies.each do |movie| %>
+  <tr>
+    <td>
+      <%= movie.id %>
+    </td>
+
+    <td>
+      <%= movie.title %>
+    </td>
+
+    <td>
+      <%= movie.description %>
+    </td>
+
+    <td>
+      <%= movie.image_url %>
+    </td>
+
+    <td>
+      <%= time_ago_in_words(movie.created_at) %> ago
+    </td>
+    <td>
+      <%= time_ago_in_words(movie.updated_at) %> ago
+    </td>
+
+    <td>
+      <%= link_to "Show details", movie %>
+    </td>
+  </tr>
+  <% end %>
+</table>
+```
+
+To using partial:
+
+```
+<!-- app/views/movies/_movie_card.html.erb -->
+
+<div class="col-md-3">
+  <div class="card">
+    <div class="card-header">
+      <%= link_to "Movie ##{movie.id}", movie %>
+    </div>
+
+    <div class="card-body">
+      <dl>
+        <dt>
+          Title
+        </dt>
+        <dd>
+          <%= movie.title %>
+        </dd>
+
+        <dt>
+          Description
+        </dt>
+        <dd>
+          <%= movie.description %>
+        </dd>
+      </dl>
+
+      <div class="row">
+        <div class="col">
+          <div class="d-grid">
+            <%= link_to edit_movie_path(movie), class: "btn btn-outline-secondary" do %>
+              <i class="fa-regular fa-pen-to-square"></i>
+            <% end %>
+          </div>
+        </div>
+        <div class="col">
+          <div class="d-grid">
+            <%= link_to movie, data: { turbo_method: :delete }, class: "btn btn-outline-secondary" do %>
+              <i class="fa-regular fa-trash-can"></i>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      Last updated <%= time_ago_in_words(movie.updated_at) %> ago
+    </div>
+  </div>
+</div>
+```
+
+call the above partial from: 
+
+```
+<!-- index.html.erb -->
+
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+  <div class="row">
+    <% @movies.each do |movie| %>
+      <%= render partial: "movies/movie_card", locals: { movie: movie } %>
+    <% end %>
+  </div>
+</div>
+```
+Note: 
+- the use of columns in the above codes.
+- an instance variable is being passed in the render partial tag as: `<%= render partial: "movies/movie_card", locals: { movie: movie } %>`.
+
+(47 min) refactor with _movie_card.html.erb partial.
+
+
+### G3. Refactors show.html.erb - 49 min
+
+
+
+```
 
 ### Appendix A
 
