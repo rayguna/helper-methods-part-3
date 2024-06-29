@@ -1123,7 +1123,205 @@ However, by doing this we lose the grid format. So, we will stick with the previ
 
 
 ### I. Partials shine along with Jump To File (58 min)
+(1 h)
 
+1. Another feature in rails called filters of before action.
+2. You can add a "decorateor" in rails, which is a one line statement above a function so that it is always executed when any functions is executed. This statement is called `before_action :function_name`.
+
+For example:
+
+```
+class MoviesController <> ApplicationController
+  before_action :foo
+
+  ...
+
+  def foo
+    p "hiya"*100
+  end
+
+  ...
+
+end 
+```
+
+3. Some syntaxes: you can filter the action, such as:
+
+example 1 - exclude certain functions
+```
+before_action :foo, except: [:show, :destroy]
+```
+
+example 2 - specific functions
+```
+before_action :foo, only: [:show, :destroy]
+```
+
+4. In our case, the show, edit, update, and destroy functions share similarities. All of them begin the function with finding movie. So, let's refactor it with:
+
+```
+class MoviesController <> ApplicationController
+  before_action :set_movie, only: [:show, :edit, :update, :destroy]
+
+
+  def foo
+    p "hiya"*100
+  end
+
+  private
+  
+  def set_movie
+    @movie = Movie.find(params.fetch(:id))
+  end
+
+end
+```
+
+At the same time, you can remove `@movie = Movie.find(params.fetch(:id))` from the start of the listed functions.
+
+(1 h 1 min)
+
+Some people, however, may choose to not adapt this type of refactoring for the sake of clarity. 
+
+
+### J. Adding Director Table
+
+1. Use the shorthand command: 'rails g scaffold actor name dob:date bio: text`. 
+```
+helper-methods-part-3 main % rails g scaffold actor name dob:date bio: text
+      invoke  active_record
+      create    db/migrate/20240629220552_create_actors.rb
+      create    app/models/actor.rb
+      invoke  resource_route
+       route    resources :actors
+      invoke  scaffold_controller
+      create    app/controllers/actors_controller.rb
+      invoke    erb
+      create      app/views/actors
+      create      app/views/actors/index.html.erb
+      create      app/views/actors/edit.html.erb
+      create      app/views/actors/show.html.erb
+      create      app/views/actors/new.html.erb
+      create      app/views/actors/_form.html.erb
+      create      app/views/actors/_actor.html.erb
+      invoke    resource_route
+      invoke    jbuilder
+      create      app/views/actors/index.json.jbuilder
+      create      app/views/actors/show.json.jbuilder
+      create      app/views/actors/_actor.json.jbuilder
+```
+
+2. Follow by `rails db:migrate`.
+
+```
+helper-methods-part-3 main % rails db:migrate
+== 20240629220552 CreateActors: migrating =====================================
+-- create_table(:actors)
+   -> 0.0661s
+== 20240629220552 CreateActors: migrated (0.0662s) ============================
+```
+
+(1 h 6 min)
+
+3. Discuss about json.
+
+### K. Implementing devise gem to require user to sign in. -User accounts with Devise
+
+1. Add `gem "devise"` to the Gemfile. Then, type 'bundle install`. Make sure you see the gemfile folder, however, by typing pwd or ls.
+2. Then type: 
+- `rails g devise:install`.
+- create user resource: 
+    - `rails g devise user first_name:string last_name:string`
+
+- I made a mistake when generating user table. Undo it with the command: `rails destroy devise user`.
+
+helper-methods-part-3 main % rails destroy devise user
+      invoke  active_record
+      remove    db/migrate/20240629221839_add_devise_to_users.rb
+      remove    app/models/user.rb
+       route  devise_for :users
+- Re-do the command, create user resource: 
+    - `rails g devise user first_name:string last_name:string`
+
+```
+helper-methods-part-3 main % rails g devise user first_name:string last_name:string --force
+      invoke  active_record
+Could not generate field 'last_name' with unknown type 'string--force'.
+```
+
+- Instead, type: `rails g devise user first_name:string last_name:string --force`.
+
+```
+helper-methods-part-3 main % rails g devise user first_name:string last_name:string --force
+      invoke  active_record
+      remove    db/migrate/20240629221646_devise_create_users.rb
+      create    db/migrate/20240629222724_devise_create_users.rb
+      create    app/models/user.rb
+      insert    app/models/user.rb
+       route  devise_for :users
+```
+- Migrate the table to the database: `rake db:migrate` 
+
+3. You must restart the server and then go to: https://obscure-space-funicular-9q7rwrgj5qg27594-3000.app.github.dev/users/sign_in. You should see the sign-in page.
+
+4. Modify _navbar.html.erb.
+
+Before:
+
+```
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+  <li class="nav-item">
+    <%= link_to "Movies", movies_path, class: "nav-link" %>
+    <%# <a class="nav-link active" aria-current="page" href="#">Home</a> %>
+  </li>
+</ul>
+```
+
+After:
+
+```
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+  <li class="nav-item">
+    <%= link_to "Movies", movies_path, class: "nav-link" %>
+  </li>
+
+  <li class="nav-item">
+    <%= link_to "Edit profile", edit_user_registration_path(current_user), class: "nav-link" %>
+  </li>
+  <li class="nav-item">
+    <%= link_to "Sign out", destroy_user_session_path, class: "nav-link", data: { turbo_method: :delete } %>
+  </li>
+  <li class="nav-item">
+    <%= link_to "Log in", new_user_session_path, class: "nav-link" %>
+  </li>
+  <li class="nav-item">
+    <%= link_to "Sign up", new_user_registration_path, class: "nav-link" %>
+  </li>
+</ul>
+```
+
+In the above code, note the following:
+- data: { turbo_method: :delete } has been added for the sign out action, because this is a DELETE request in the route that Devise defines.
+
+- If someone is signed in, conditionally display sign out/edit profile links in the navbar. You can check if someone is signed in with the user_signed_in? method, which is defined by Devise and available in all view templates.
+
+- For the edit profile link, make the content of the <a> tag the user’s first name + last name. You can access the signed in user with the current_user helper method, which is defined by Devise and available in all actions and all view templates.
+
+- Sign out. (If your sign-out link didn’t work, you probably forgot to add data: { turbo_method: :delete } to it.)
+
+- Force someone to be signed in by adding the before_action :authenticate_user! method to the ApplicationController. The :authenticate_user! method is defined by Devise:
+
+6. Modify:
+
+```
+# app/controllers/application_controller.rb
+
+class ApplicationController < ActionController::Base
+  before_action :authenticate_user!
+end
+```
+
+Here is the pull request: https://github.com/appdev-projects/helper-methods-part-3/pull/2/files 
 
 ### Appendix A
 
