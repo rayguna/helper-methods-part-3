@@ -13,7 +13,11 @@ Resources: https://getbootstrap.com/docs/5.3/examples/
 ***
 Notes:
 
-1. () Include the links to bootstrap CSS into the head tag of app/views/layouts/application.html.erb.
+### A. Add boostrap CSS 
+
+#### A1. Add nav tag
+
+1. (1 min) Include the links to bootstrap CSS into the head tag of app/views/layouts/application.html.erb.
 ```
 <!-- app/views/layouts/application.html.erb -->
 
@@ -90,7 +94,7 @@ With
 <%= link_to "Helper Methods 3", root_path, class: "navbar-brand" %>
 ```
 
-4. Simplify the above to:
+4. Customize the above script to:
 ```
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
       <div class="container-fluid">
@@ -115,6 +119,8 @@ With
       </div>
     </nav>
 ```
+
+#### A2. Add alerts
 
 5. (8 min) Add alerts: https://getbootstrap.com/docs/5.3/components/alerts/
 
@@ -175,6 +181,10 @@ To:
 
     </div>
 ```
+
+### B. Add a new column to an existing table
+
+#### B1. Add a new column - go through RCAV
 
 8. (16 min) Add a new column to your table:
 ```
@@ -246,6 +256,8 @@ Annotated (2): app/models/movie.rb, test/fixtures/movies.yml
     ```
 TIPS: ALWAYS LOOK AT YOUR SERVER LOG TO TROUBLESHOOT ISSUE.
 
+#### B2. Refactor methods by turning certain repeating blocks into private methods.
+
 13. **Amazing!** (22 min) Refactor into:
 ```
   def create
@@ -271,13 +283,18 @@ TIPS: ALWAYS LOOK AT YOUR SERVER LOG TO TROUBLESHOOT ISSUE.
 ```
 
 Note: 
-- by functionalizing the movie params, it can be called by multiple functions. It is a refactoring strategy.
+- by functionalizing the movie params, it can be called by multiple other functions. It is a refactoring strategy.
 - you are placing the def movie params at the aend and precede it with the keyword private, so it is only accessible only by the class internally.
 (23 min)
 
+
+### C. Refactor html templates
+
+#### C1. separate html templates into separate files
+
 14. (24.35 min) new.html.erb - partial view templates.
 
-partial view templates can be disringuished from full view templates by its name:
+partial view templates can be distinguished from full view templates by its name:
 
 ```
 app/views/zebra/_giragge.html.erb.
@@ -286,8 +303,113 @@ app/views/zebra/_giragge.html.erb.
 You can embed into any other html pages with:
 `<%= render "zebra/giraffe" %>`
 
-When rendering the file, you don't include the underscore.
+When rendering the file, you don't include the underscore in the tag.
 
 (26 min)
 
 15. (27 min) Refactoring strategy using partial view templates.
+
+***
+
+16. To keep the code length short, separate it into sections and make a separate file within views called shared/_flash_messaged.html.erb and migrate the flash message section into this file.
+
+```
+<!-- views/shared/_flash_messages.html.erb-->
+
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<%end%>
+
+<% if alert.present? %>
+  <div class="alert alert-danger" role="alert">
+    <%= alert %>
+  </div>
+<%end%>
+```
+
+17. Replace this block within views/layouts/applications.html.erb with just `<%= render "shared/flash_messages" %>`. 
+
+18. (27 min) Likewise, do the same for navbar, which is called within applications.html.erb with just `<%= render "shared/navbar" %>`:
+
+```
+<!-- views/shared/_navbar.html.erb-->
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <%= link_to "Helper Methods 3", root_path, class: "navbar-brand" %>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <%= link_to "Movies", movies_path, class: "nav-link" %>
+              <%# <a class="nav-link active" aria-current="page" href="#">Home</a> %>
+            </li>
+          </ul>
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+```
+
+19. Likewise, refactors cdn_assets, which is called within applications.html.erb with just `<%= render "shared/cdn_assets" %>`:
+
+```
+<!-- views/shared/_cdn_assets.html.erb-->
+
+    <!-- Make it responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Connect Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+
+    <!-- Connect Bootstrap JavaScript and its dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Connect Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"></script>
+```
+
+#### C2. Place meta charset at the top
+
+Note that the meta charset tag is not included. It is left off and moved to the uppermost of the <head> tag:
+
+```
+<!-- Expand the number of characters we can use in the document beyond basic ASCII 🎉 -->
+    <meta charset="utf-8">
+```
+
+The browser needs to know at the very start which font to use before doing anything else.
+
+
+
+### Appendix A
+
+1. You can also pass variables into the partial view templates as follows:
+
+```
+<!-- shared/_elephant.html.erb -->
+
+<h1> Hello <%=person%> <> </h1>
+```
+
+And
+
+```
+<!-- movies/index.html.erb -->
+
+<render partial: "shared/elephant", locals: {person: "Alice"}>
+```
+
+
+Here, you are passing the variables via a hash called locals.
+
+***
