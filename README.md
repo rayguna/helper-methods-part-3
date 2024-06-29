@@ -175,3 +175,119 @@ To:
 
     </div>
 ```
+
+8. (16 min) Add a new column to your table:
+```
+rails g migration AddImageUrlToMovies image_url:string
+```
+
+output:
+```
+helper-methods-part-3 main % rails g migration AddImageUrlToMovies image_url:string
+      invoke  active_record
+      create    db/migrate/20240629045942_add_image_url_to_movies.rb
+```
+Then, type:
+```
+rails db:migrate
+```
+
+output:
+```
+helper-methods-part-3 main % rails db:migrate
+== 20240629045942 AddImageUrlToMovies: migrating ==============================
+-- add_column(:movies, :image_url, :string)
+   -> 0.0024s
+== 20240629045942 AddImageUrlToMovies: migrated (0.0025s) =====================
+
+Annotated (2): app/models/movie.rb, test/fixtures/movies.yml
+```
+
+9. db/schema.rb shows that image_url column now exists.
+(17.33 min)
+```
+  create_table "movies", force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "image_url"
+  end
+```
+
+10. (19 min) Another way to update your table is to modify the db/migrate/...movies table and tye in the terminal rails DB rollback, followed by rails db:migrate.
+
+11. Go to views/movies/new.html.erb. Add a new form.
+```
+<div>
+  <%=form.label :image_url %>
+  <%=form.text_area :image_url %>
+</div>
+```
+
+12. (21 min) Add a new column in the table of movies to display the image_url column in index.html.erb. HOwever, the value of image_url is not shown. why?
+
+  - Answer: the def create method within the movies_controller.rb, params.. permit has not included image_url. Fix it to:
+
+    ```
+    def create
+      movie_params = params.require(:movie).permit(:title, :description, :image_url)
+      
+      @movie = Movie.new(movie_params)
+
+      if @movie.valid?
+        @movie.save
+
+        redirect_to movies_url, notice: "Movie created successfully."
+      else
+        render "new"
+      end
+    end
+    ```
+TIPS: ALWAYS LOOK AT YOUR SERVER LOG TO TROUBLESHOOT ISSUE.
+
+13. **Amazing!** (22 min) Refactor into:
+```
+  def create
+    @movie = Movie.new(self.movie_params)
+    ...
+  end
+
+   def update
+    @movie = Movie.find(params.fetch(:id))
+
+    if @movie.update(self.movie_params)
+      redirect_to @movie, notice: "Movie updated successfully."
+    else
+      render "edit"
+    end
+  end
+
+  private
+
+  def movie_params
+    movie_params = params.require(:movie).permit(:title, :description, :image_url, :director_id)
+  end
+```
+
+Note: 
+- by functionalizing the movie params, it can be called by multiple functions. It is a refactoring strategy.
+- you are placing the def movie params at the aend and precede it with the keyword private, so it is only accessible only by the class internally.
+(23 min)
+
+14. (24.35 min) new.html.erb - partial view templates.
+
+partial view templates can be disringuished from full view templates by its name:
+
+```
+app/views/zebra/_giragge.html.erb.
+```
+
+You can embed into any other html pages with:
+`<%= render "zebra/giraffe" %>`
+
+When rendering the file, you don't include the underscore.
+
+(26 min)
+
+15. (27 min) Refactoring strategy using partial view templates.

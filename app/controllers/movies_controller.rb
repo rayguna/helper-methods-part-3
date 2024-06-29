@@ -18,9 +18,7 @@ class MoviesController < ApplicationController
   end
 
   def create
-    movie_params = params.require(:movie).permit(:title, :description)
-    
-    @movie = Movie.new(movie_params)
+    @movie = Movie.new(self.movie_params)
 
     if @movie.valid?
       @movie.save
@@ -38,9 +36,7 @@ class MoviesController < ApplicationController
   def update
     @movie = Movie.find(params.fetch(:id))
 
-    movie_params = params.require(:movie).permit(:title, :description)
-    
-    if @movie.update(movie_params)
+    if @movie.update(self.movie_params)
       redirect_to @movie, notice: "Movie updated successfully."
     else
       render "edit"
@@ -54,4 +50,10 @@ class MoviesController < ApplicationController
 
     redirect_to movies_url, notice: "Movie deleted successfully."
   end
+end
+
+private
+
+def movie_params
+  movie_params = params.require(:movie).permit(:title, :description, :image_url, :director_id)
 end

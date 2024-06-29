@@ -4,6 +4,8 @@
 
 <hr>
 
+<%= render "zebra/giraffe" %>
+
 <div>
   <%= link_to "Add a new movie", new_movie_path %>
 </div>
@@ -22,6 +24,10 @@
 
     <th>
       Description
+    </th>
+
+    <th>
+      image_url
     </th>
 
     <th>
@@ -48,6 +54,10 @@
 
     <td>
       <%= movie.description %>
+    </td>
+
+    <td>
+      <%= movie.image_url %>
     </td>
 
     <td>
