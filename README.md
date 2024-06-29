@@ -116,4 +116,43 @@ With
     </nav>
 ```
 
-5. 
+5. (8 min) Add alerts: https://getbootstrap.com/docs/5.3/components/alerts/
+
+Change from:
+```
+  <div style="color: green;">
+    <%= notice %>
+  </div>
+
+  <div style="color: red;">
+    <%= alert %>
+  </div>
+```
+
+To:
+```
+<div class="alert alert-success" role="alert">
+  <%= notice %>
+</div>
+<div class="alert alert-danger" role="alert">
+  <%= alert %>
+</div>
+```
+
+6. (10 min) Change the above script to:
+
+```
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<%end%>
+
+<% if alert.present? %>
+  <div class="alert alert-danger" role="alert">
+    <%= alert %>
+  </div>
+<%end%>
+```
+
+7. 
