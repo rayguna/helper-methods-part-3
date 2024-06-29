@@ -785,7 +785,7 @@ To using partial:
 ```
 <!-- app/views/movies/_movie_card.html.erb -->
 
-<div class="col-md-3">
+<div class="row-md-3">
   <div class="card">
     <div class="card-header">
       <%= link_to "Movie ##{movie.id}", movie %>
@@ -850,11 +850,12 @@ call the above partial from:
 
 <hr>
 
-  <div class="row">
-    <% @movies.each do |movie| %>
-      <%= render partial: "movies/movie_card", locals: { movie: movie } %>
-    <% end %>
-  </div>
+<div class="row">
+  <% @movies.each do |movie| %>
+    <div class="col-md-3">
+      <%= render partial: "movies/movie", locals: { movie: movie } %>
+    </div>
+  <% end %>
 </div>
 ```
 Note: 
@@ -866,9 +867,263 @@ Note:
 
 ### G3. Refactors show.html.erb - 49 min
 
+New.html.erb and show.html.erb have similar information. So, let's refactor show.html.erb in the same ways and new.html.erb. 
 
+1. Here is show.html.erb before refactoring:
 
 ```
+<div>
+  <div>
+    <h1>
+      Movie #<%= @movie.id %> details
+    </h1>
+
+    <div>
+      <div>
+        <%= link_to "Go back", movies_path %>
+      </div>
+
+      <div>
+        <%= link_to "Edit Movie", edit_movie_path(@movie) %>
+      </div>
+
+      <div>
+        <%= link_to "Delete Movie", @movie, data: { turbo_method: :delete } %>
+      </div>
+    </div>
+
+    <dl>
+      <dt>
+        Title
+      </dt>
+      <dd>
+        <%= @movie.title %>
+      </dd>
+
+      <dt>
+        Description
+      </dt>
+      <dd>
+        <%= @movie.description %>
+      </dd>
+
+      <dt>
+        Created at
+      </dt>
+      <dd>
+        <%= time_ago_in_words(@movie.created_at) %> ago
+      </dd>
+
+      <dt>
+        Updated at
+      </dt>
+      <dd>
+        <%= time_ago_in_words(@movie.updated_at) %> ago
+      </dd>
+    </dl>
+  </div>
+</div>
+```
+
+2. Here is after. We use "movies/_movie_card.html.erd". Note also the use of grids.
+
+```
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <%= render partial: "movies/movie_card", locals: {movie: @movie} %>
+  </div>
+</div>
+```
+(52 min)
+
+### H. Refactoring render
+
+1. When you render to partial templates, you can further simplify them by adding a method to the Movie object, so that when the object is called it will automatically call the method to the partial_path.You can refactor, e.g., index.html.erb, show.html.erb, and new.html.erb, as follows:
+
+2. (53 min) First, add an encapsulated method called to_partial_path to Movie table:
+
+```
+#app/models/movie.rb
+
+class Movie < ApplicationRecord
+  validates :title, presence: true
+
+  def to_partial_path
+    "movies/movie_card"
+  end
+end
+```
+
+2. index.html.erb
+
+- Before
+```
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+  <div class="row">
+    <% @movies.each do |movie| %>
+      <%= render partial: "movies/movie_card", locals: { movie: movie } %>
+    <% end %>
+  </div>
+</div>
+```
+- After
+```
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+  <div class="row">
+    <% @movies.each do |movie| %>
+      <%= render movie } %>
+    <% end %>
+  </div>
+</div>
+```
+
+3. show.html.erb
+
+- Before
+```
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <%= render partial: "movies/movie_card", locals: {movie: @movie} %>
+  </div>
+</div>
+```
+- After
+```
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <%= render @movie %>
+  </div>
+</div>
+```
+4. new.html.erb
+
+
+- Before
+```
+<h1>New movie</h1>
+
+<%= render partial: "movies/form", locals: {foo: @new_movie } %>
+```
+
+- After
+```
+<h1>New movie</h1>
+
+<%= render @new_movie %>
+```
+
+### H. Refactoring further
+
+1. change _movie_card.html.erb to theconventional name, _movie.html.erb (55 min).
+2. In movie.rb and index.rb, you need to change the path name from `movies/movie_card` to just 'movies/movie'. 
+3. By changing the partial filename to just movies/movie.html.erb, you can eliminate the encapsulated method in the models/movie.rb file.
+
+From:
+```
+class Movie < ApplicationRecord
+  validates :title, presence: true
+
+  def to_partial_path
+    "movies/movie"
+  end
+end
+```
+
+Back to:
+```
+class Movie < ApplicationRecord
+  validates :title, presence: true
+end
+```
+
+4. You can subsequently simplify:
+
+```
+<!--show.html-->
+
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <%= render @movie %>
+  </div>
+</div>
+```
+(56 min)
+
+5. Moreover, you can simplify iteration within index.html.erb:
+
+From:
+```
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+<div class="row">
+  <% @movies.each do |movie| %>
+    <div class = "col=md-3">
+      <%= render partial: "movies/movie", locals: { movie: movie } %>
+    </div>
+  <% end %>
+</div>
+```
+
+To just:
+```
+<h1>
+  List of all movies
+</h1>
+
+<hr>
+
+<div>
+  <%= link_to "Add a new movie", new_movie_path %>
+</div>
+
+<hr>
+
+  <div class="row">
+    <%= render @movies %>
+  </div>
+</div>
+```
+**Amazing!** This is a cool feature that rails can iterate an object automatically.
+
+However, by doing this we lose the grid format. So, we will stick with the previous code version.
+
+6. new.html.erb and edit.html.erb can't be simplified like the above because the name of the instantiated objects are @new_move and @the_movie, respectively. 
+
+
+### I. Partials shine along with Jump To File (58 min)
+
 
 ### Appendix A
 
